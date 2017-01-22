@@ -3,5 +3,7 @@ Tool to rename nodes in Maya
 
 #### Usage
 Execute the following python commands:
-
-`import renamerGui; renamerGui.main()`
+```python
+import renamerGui
+renamerGui.main()
+```
