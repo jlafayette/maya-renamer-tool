@@ -1,36 +1,53 @@
 import maya.api.OpenMaya as om
 
 
+def no_empty(arg_index, err_label):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if not args[arg_index]:
+                om.MGlobal.displayError("No {label} given!".format(label=err_label))
+                return
+            else:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def no_first_digit(arg_index, err_label):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if args[arg_index][0].isdigit():
+                om.MGlobal.displayError("{label} cannot begin with a digit!".format(label=err_label.capitalize()))
+                return
+            else:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+@no_empty(0, "string to replace")
 def replace(old_str, new_str):
     print "Replace '{f}' with '{r}'".format(f=old_str, r=new_str)
-    if not old_str:
-        om.MGlobal.displayError("Cannot replace empty string!")
-        return
     _renamer(_get_replace_func(old_str, new_str))
 
 
+@no_empty(0, "prefix")
+@no_first_digit(0, "prefix")
 def add_prefix(prefix):
     print "Add prefix: {p}".format(p=prefix)
-    if _check_empty(prefix, "prefix"):
-        return
-    if _check_first_digit(prefix, "prefix"):
-        return
     _renamer(_get_prefix_func(prefix))
 
 
+@no_empty(0, "suffix")
 def add_suffix(suffix):
     print "Add suffix: {s}".format(s=suffix)
-    if _check_empty(suffix, "suffix"):
-        return
     _renamer(_get_suffix_func(suffix))
 
 
+@no_empty(0, "rename string")
+@no_first_digit(0, "name")
 def rename_and_number(input_str):
     print "Rename and number based on: {i}".format(i=input_str)
-    if _check_empty(input_str, "rename string"):
-        return
-    if _check_first_digit(input_str, "name"):
-        return
     _renamer(_get_rename_and_number_func(input_str))
 
 
@@ -44,22 +61,7 @@ def _renamer(rename_func):
         new_name = rename_func(name, count=i)
         mod.renameNode(mobj, new_name)
     mod.doIt()
-
-
-def _check_empty(input_str, label):
-    if not input_str:
-        om.MGlobal.displayError("No {label} given!".format(label=label))
-        return True
-    else:
-        return False
-
-
-def _check_first_digit(input_str, label):
-    if input_str[0].isdigit():
-        om.MGlobal.displayError("{label} cannot begin with a digit!".format(label=label.capitalize()))
-        return True
-    else:
-        return False
+    om.MGlobal.displayInfo("Renamed {num} objects".format(num=sel.length()))
 
 
 def fix_illegal_name(name_str):
